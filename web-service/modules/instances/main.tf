@@ -5,7 +5,7 @@ data "aws_ami" "ubuntu_web" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20230112"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
@@ -16,12 +16,27 @@ data "aws_ami" "ubuntu_web" {
   owners = ["099720109477"]
 }
 
+resource "aws_key_pair" "poc_key" {
+  key_name   = "poc_ssh_key"
+  public_key = file("${path.module}/${var.SSH_PUBLIC_KEY}")
+}
+
+data "cloudinit_config" "example" {
+  part {
+    content_type = "text/x-shellscript"
+    content      = templatefile("${path.module}/nginx.sh", {})
+  }
+}
+
 resource "aws_instance" "web" {
   count           = length(var.subnet_id)
   ami             = data.aws_ami.ubuntu_web.id
   instance_type   = var.instance_type
   subnet_id       = var.subnet_id[count.index]
-  # key_name        = "jenkin-ssh"
+  key_name = aws_key_pair.poc_key.key_name
+  vpc_security_group_ids = [var.public_security_group_id]
+  user_data = data.cloudinit_config.example.rendered
+
 
   # root disk
   root_block_device {
@@ -30,6 +45,26 @@ resource "aws_instance" "web" {
     encrypted                 = false
     delete_on_termination     = true
   }
+
+#  provisioner "file" {
+##    source      = file("${path.module}/nginx.sh")
+#    source      = file("/home/tholh/Desktop/terraform-project/web-service/modules/instances/nginx.sh")
+#    destination = "/tmp/nginx.sh"
+#  }
+#
+#  provisioner "remote-exec" {
+#    inline = [
+#      "chmod +x /tmp/nginx.sh",
+#      "sudo /tmp/nginx.sh",
+#    ]
+#  }
+
+#  connection {
+#    host        = coalesce(self.public_ip, self.private_ip)
+#    type        = "ssh"
+#    user        = var.INSTANCE_USERNAME
+#    private_key = file("${path.module}/${var.SSH_PRIVATE_KEY}")
+#  }
 
   tags = {
     "Name"                      = "${var.servers["my_server_web"]}${count.index + 1}"

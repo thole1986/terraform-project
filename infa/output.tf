@@ -25,3 +25,7 @@ output "vpc_id" {
 output "elastic_ip" {
   value = module.networking.elastic_ip
 }
+
+output "public_security_group_id" {
+  value = module.networking.public_security_group_id
+}

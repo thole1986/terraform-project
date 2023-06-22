@@ -22,7 +22,7 @@ output "private_subnet_cidr_list_ipv4" {
 }
 
 output "public_subnet_ids" {
-  value = aws_subnet.private_subnet[*].id
+  value = aws_subnet.public_subnet[*].id
 }
 
 output "private_subnet_ids" {
@@ -33,7 +33,7 @@ output "arn_public_subnet" {
   value = aws_subnet.public_subnet[*].arn
 }
 
-output "public_security_group" {
+output "public_security_group_id" {
   value = aws_security_group.public_security.id
 }
 

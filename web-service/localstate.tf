@@ -12,7 +12,7 @@ data "terraform_remote_state" "networking" {
   backend = "local"
 
   config = {
-    path = "../terraform-infaIMSPOC/modules/networking/terraform.tfstate"
+    path = "../infa/modules/networking/terraform.tfstate"
   }
 }
 
